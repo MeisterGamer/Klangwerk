@@ -70,6 +70,11 @@ gradle :app:bundleRelease
 gradle :app:testDebugUnitTest
 ```
 
+### Signierte APK im Repository
+
+- Im Ordner `releases/` liegt eine direkt installierbare, signierte Test-/Sideload-APK: `releases/Klangwerk-v1.0-debug-signed.apk` (signiert mit dem Projekt-Debug-Keystore `debugConfig`, SHA-256: `33a9751e0548a507296eebf2863965612c7556dfc7d52f829350348e1c1cb56b`).
+- Für eine **Produktiv-/Play-Store-Signatur** (Release-APK oder `.aab`) verwende im AI-Studio-Einstellungsmenü die Export-Funktion für APK/AAB oder hinterlege deinen privaten Upload-Keystore (`KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, Alias `upload`).
+
 ### Verwendete Berechtigungen
 
 - `READ_MEDIA_AUDIO` (Android 13+) bzw. `READ_EXTERNAL_STORAGE` (`maxSdkVersion="32"`): Automatischer Scan lokaler Audiodateien via `MediaStore`.
