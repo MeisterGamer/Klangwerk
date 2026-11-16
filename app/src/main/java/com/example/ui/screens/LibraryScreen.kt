@@ -71,6 +71,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.data.model.AlbumGroup
 import com.example.data.model.ArtistGroup
+import com.example.data.model.FolderGroup
 import com.example.data.model.LibraryFilter
 import com.example.data.model.MediaTrack
 import com.example.data.model.PlaylistSummary
@@ -111,6 +112,7 @@ fun LibraryScreen(
   var sortMenuExpanded by remember { mutableStateOf(false) }
   var expandedAlbum by remember { mutableStateOf<String?>(null) }
   var expandedArtist by remember { mutableStateOf<String?>(null) }
+  var expandedFolder by remember { mutableStateOf<String?>(null) }
 
   Column(modifier = modifier.fillMaxSize()) {
     // Top Header + Search Bar
@@ -448,6 +450,56 @@ fun LibraryScreen(
                 },
                 onPlayArtist = { onPlayQueue(artist.tracks, 0) },
                 onPlayTrack = { idx -> onPlayQueue(artist.tracks, idx) },
+                onToggleFavorite = onToggleFavorite,
+                onPlayNext = onPlayNext,
+                onAddToQueue = onAddToQueue,
+                onAddToPlaylist = onAddToPlaylist,
+                onShowDetails = onShowDetails,
+              )
+            }
+          }
+        }
+
+        LibraryFilter.FOLDERS -> {
+          item(key = "folders_toolbar") {
+            Row(
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+              horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+              OutlinedButton(
+                onClick = onImportFolder,
+                modifier = Modifier.fillMaxWidth().testTag("folders_link_folder_button"),
+              ) {
+                Icon(
+                  Icons.Filled.CreateNewFolder,
+                  contentDescription = null,
+                  modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Weiteren Ordner verknüpfen")
+              }
+            }
+          }
+          if (uiState.folders.isEmpty()) {
+            item(key = "empty_folders") {
+              EmptyLibraryState(
+                searchActive = searchQuery.isNotBlank(),
+                onImportFiles = onImportFiles,
+                onImportFolder = onImportFolder,
+              )
+            }
+          } else {
+            items(uiState.folders, key = { "folder_${it.name}" }) { folder ->
+              FolderGroupCard(
+                folder = folder,
+                expanded = expandedFolder == folder.name,
+                currentTrackUri = currentTrackUri,
+                isPlaying = isPlaying,
+                onToggleExpand = {
+                  expandedFolder = if (expandedFolder == folder.name) null else folder.name
+                },
+                onPlayFolder = { onPlayQueue(folder.tracks, 0) },
+                onPlayTrack = { idx -> onPlayQueue(folder.tracks, idx) },
                 onToggleFavorite = onToggleFavorite,
                 onPlayNext = onPlayNext,
                 onAddToQueue = onAddToQueue,
@@ -796,6 +848,93 @@ private fun ArtistGroupCard(
       AnimatedVisibility(visible = expanded) {
         Column(modifier = Modifier.padding(bottom = 8.dp)) {
           artist.tracks.forEachIndexed { idx, track ->
+            TrackListItem(
+              track = track,
+              isCurrentTrack = track.uri == currentTrackUri,
+              isPlaying = isPlaying,
+              onClick = { onPlayTrack(idx) },
+              onToggleFavorite = { onToggleFavorite(track.uri) },
+              onPlayNext = { onPlayNext(track) },
+              onAddToQueue = { onAddToQueue(track) },
+              onAddToPlaylist = { onAddToPlaylist(track) },
+              onShowDetails = { onShowDetails(track) },
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun FolderGroupCard(
+  folder: FolderGroup,
+  expanded: Boolean,
+  currentTrackUri: String?,
+  isPlaying: Boolean,
+  onToggleExpand: () -> Unit,
+  onPlayFolder: () -> Unit,
+  onPlayTrack: (Int) -> Unit,
+  onToggleFavorite: (String) -> Unit,
+  onPlayNext: (MediaTrack) -> Unit,
+  onAddToQueue: (MediaTrack) -> Unit,
+  onAddToPlaylist: (MediaTrack) -> Unit,
+  onShowDetails: (MediaTrack) -> Unit,
+) {
+  Surface(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
+    shape = RoundedCornerShape(16.dp),
+    color = MaterialTheme.colorScheme.surfaceContainerLow,
+    tonalElevation = 2.dp,
+  ) {
+    Column {
+      Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onToggleExpand).padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Box(
+          modifier =
+            Modifier.size(48.dp)
+              .clip(RoundedCornerShape(12.dp))
+              .background(MaterialTheme.colorScheme.secondaryContainer),
+          contentAlignment = Alignment.Center,
+        ) {
+          Icon(
+            imageVector = Icons.Filled.FolderOpen,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+          )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+          Text(
+            text = folder.name,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+          Text(
+            text = "${folder.tracks.size} Titel • ${formatDuration(folder.totalDurationMs)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+        IconButton(onClick = onPlayFolder) {
+          Icon(
+            imageVector = Icons.Filled.PlayArrow,
+            contentDescription = "Ordner abspielen",
+            tint = MaterialTheme.colorScheme.primary,
+          )
+        }
+        Icon(
+          imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+          contentDescription = if (expanded) "Einklappen" else "Ausklappen",
+          tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+      AnimatedVisibility(visible = expanded) {
+        Column(modifier = Modifier.padding(bottom = 8.dp)) {
+          folder.tracks.forEachIndexed { idx, track ->
             TrackListItem(
               track = track,
               isCurrentTrack = track.uri == currentTrackUri,

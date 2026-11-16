@@ -30,6 +30,5 @@ class KlangwerkApp : Application() {
   override fun onCreate() {
     super.onCreate()
     container = AppContainer(this)
-    container.playbackController.connect()
   }
 }

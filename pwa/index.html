@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0A131A" />
+  <meta name="description" content="Klangwerk – Lokaler Musik- und Video-Player mit Wiedergabelisten, Ordneransicht, Suche und 5-Band-Equalizer." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <title>Klangwerk</title>
+  <style>
+    :root {
+      --bg: #0e1117;
+      --surface: #151922;
+      --surface-high: #1e2430;
+      --primary: #6cd4ff;
+      --accent: #ffb86b;
+      --text: #e6eaf0;
+      --muted: #9ba5b4;
+      --border: #282f3c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 16px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 { margin: 0; font-size: 1.35rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button, label.btn {
+      background: var(--surface-high);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.primary, label.btn.primary {
+      background: var(--primary);
+      color: #003547;
+      border-color: transparent;
+    }
+    input[type="file"] { display: none; }
+    main {
+      flex: 1;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .search {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-high);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .list { display: grid; gap: 8px; margin-top: 12px; }
+    .track {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--surface-high);
+      cursor: pointer;
+    }
+    .track.active { outline: 1px solid var(--primary); }
+    .meta small { color: var(--muted); display: block; }
+    .eq-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .eq-band {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .eq-band input[type="range"] { width: 100%; accent-color: var(--primary); }
+    audio, video { width: 100%; margin-top: 10px; border-radius: 12px; background: #000; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Klangwerk PWA</h1>
+      <small style="color: var(--muted)">Lokale Audio- &amp; Video-Wiedergabe</small>
+    </div>
+    <div class="actions">
+      <label class="btn primary">
+        Dateien wählen
+        <input id="fileInput" type="file" accept="audio/*,video/*" multiple />
+      </label>
+      <label class="btn">
+        Ordner laden
+        <input id="folderInput" type="file" webkitdirectory multiple />
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <input id="searchInput" class="search" type="search" placeholder="Titel oder Ordner durchsuchen…" />
+      <div id="nowPlaying" style="margin-top:12px; color: var(--muted)">Keine Datei ausgewählt</div>
+      <audio id="audioPlayer" controls hidden></audio>
+      <video id="videoPlayer" controls playsinline hidden></video>
+    </section>
+
+    <section class="card">
+      <strong>5-Band-Equalizer (Web Audio)</strong>
+      <div class="eq-grid" id="eqGrid"></div>
+    </section>
+
+    <section class="card">
+      <strong>Medien &amp; Ordner</strong>
+      <div class="list" id="trackList"></div>
+    </section>
+  </main>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+
+    const freqs = [60, 230, 910, 3600, 14000];
+    const audioEl = document.getElementById("audioPlayer");
+    const videoEl = document.getElementById("videoPlayer");
+    const nowPlaying = document.getElementById("nowPlaying");
+    const trackList = document.getElementById("trackList");
+    const searchInput = document.getElementById("searchInput");
+    const eqGrid = document.getElementById("eqGrid");
+
+    let tracks = [];
+    let activeIndex = -1;
+    let audioCtx = null;
+    let filters = [];
+
+    function initEq(mediaEl) {
+      if (audioCtx) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+      const src = audioCtx.createMediaElementSource(mediaEl);
+      let prev = src;
+      filters = freqs.map((f, i) => {
+        const b = audioCtx.createBiquadFilter();
+        b.type = i === 0 ? "lowshelf" : i === freqs.length - 1 ? "highshelf" : "peaking";
+        b.frequency.value = f;
+        b.gain.value = 0;
+        prev.connect(b);
+        prev = b;
+        return b;
+      });
+      prev.connect(audioCtx.destination);
+    }
+
+    freqs.forEach((f, idx) => {
+      const wrap = document.createElement("div");
+      wrap.className = "eq-band";
+      wrap.innerHTML = `<span>${f >= 1000 ? f / 1000 + " kHz" : f + " Hz"}</span>
+        <input type="range" min="-12" max="12" step="0.5" value="0" aria-label="${f} Hz" />`;
+      wrap.querySelector("input").addEventListener("input", (e) => {
+        if (filters[idx]) filters[idx].gain.value = parseFloat(e.target.value);
+      });
+      eqGrid.appendChild(wrap);
+    });
+
+    function addFiles(fileList) {
+      const accepted = Array.from(fileList).filter((f) =>
+        f.type.startsWith("audio/") || f.type.startsWith("video/")
+      );
+      tracks = accepted.map((file) => ({
+        name: file.name,
+        folder: file.webkitRelativePath ? file.webkitRelativePath.split("/")[0] : "Dateien",
+        type: file.type.startsWith("video/") ? "video" : "audio",
+        url: URL.createObjectURL(file)
+      }));
+      renderList();
+    }
+
+    function playTrack(idx) {
+      const t = tracks[idx];
+      if (!t) return;
+      activeIndex = idx;
+      nowPlaying.textContent = `${t.name} (${t.folder})`;
+      if (t.type === "video") {
+        audioEl.pause();
+        audioEl.hidden = true;
+        videoEl.hidden = false;
+        videoEl.src = t.url;
+        videoEl.play();
+      } else {
+        videoEl.pause();
+        videoEl.hidden = true;
+        audioEl.hidden = false;
+        initEq(audioEl);
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        audioEl.src = t.url;
+        audioEl.play();
+      }
+      renderList();
+    }
+
+    function renderList() {
+      const q = searchInput.value.trim().toLowerCase();
+      trackList.innerHTML = "";
+      tracks.forEach((t, idx) => {
+        if (q && !t.name.toLowerCase().includes(q) && !t.folder.toLowerCase().includes(q)) return;
+        const row = document.createElement("div");
+        row.className = "track" + (idx === activeIndex ? " active" : "");
+        row.innerHTML = `<div class="meta"><strong>${t.name}</strong><small>${t.folder} • ${t.type.toUpperCase()}</small></div><span>▶</span>`;
+        row.addEventListener("click", () => playTrack(idx));
+        trackList.appendChild(row);
+      });
+    }
+
+    document.getElementById("fileInput").addEventListener("change", (e) => addFiles(e.target.files));
+    document.getElementById("folderInput").addEventListener("change", (e) => addFiles(e.target.files));
+    searchInput.addEventListener("input", renderList);
+  </script>
+</body>
+</html>

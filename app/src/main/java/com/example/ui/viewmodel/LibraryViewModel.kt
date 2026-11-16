@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.model.AlbumGroup
 import com.example.data.model.AppThemeSettings
 import com.example.data.model.ArtistGroup
+import com.example.data.model.FolderGroup
 import com.example.data.model.LibraryFilter
 import com.example.data.model.MediaSource
 import com.example.data.model.MediaTrack
@@ -29,6 +30,7 @@ data class LibraryUiState(
   val filteredAudioTracks: List<MediaTrack> = emptyList(),
   val albums: List<AlbumGroup> = emptyList(),
   val artists: List<ArtistGroup> = emptyList(),
+  val folders: List<FolderGroup> = emptyList(),
   val importedTracks: List<MediaTrack> = emptyList(),
   val matchingVideos: List<MediaTrack> = emptyList(),
   val matchingPlaylists: List<PlaylistSummary> = emptyList(),
@@ -148,6 +150,14 @@ class LibraryViewModel(
             }
             .sortedBy { it.name.lowercase() }
 
+        val folders =
+          matchingAudio
+            .groupBy { it.folderName.ifBlank { "Gerät" } }
+            .map { (folderName, tracks) ->
+              FolderGroup(name = folderName, tracks = tracks)
+            }
+            .sortedBy { it.name.lowercase() }
+
         val imported = matchingAudio.filter { it.source == MediaSource.IMPORTED }
 
         val matchingVideos =
@@ -172,6 +182,7 @@ class LibraryViewModel(
           filteredAudioTracks = matchingAudio,
           albums = albums,
           artists = artists,
+          folders = folders,
           importedTracks = imported,
           matchingVideos = matchingVideos,
           matchingPlaylists = matchingPlaylists,

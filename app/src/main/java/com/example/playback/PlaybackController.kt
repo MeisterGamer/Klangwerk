@@ -93,6 +93,8 @@ class PlaybackController(
           if (controller.isPlaying) startPositionTicker()
           pendingAction?.invoke(controller)
           pendingAction = null
+        }.onFailure {
+          controllerFuture = null
         }
       },
       MoreExecutors.directExecutor(),

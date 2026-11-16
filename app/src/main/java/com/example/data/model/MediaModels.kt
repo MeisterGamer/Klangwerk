@@ -14,6 +14,7 @@ enum class LibraryFilter(val labelRes: String) {
   ALL_TRACKS("Titel"),
   ALBUMS("Alben"),
   ARTISTS("Interpreten"),
+  FOLDERS("Ordner"),
   IMPORTED("Importiert"),
 }
 
@@ -57,6 +58,14 @@ data class ArtistGroup(
   val albumCount: Int,
   val tracks: List<MediaTrack>,
 )
+
+data class FolderGroup(
+  val name: String,
+  val tracks: List<MediaTrack>,
+) {
+  val totalDurationMs: Long
+    get() = tracks.sumOf { it.durationMs }
+}
 
 data class PlaylistSummary(
   val id: Long,
