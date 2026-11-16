@@ -1,0 +1,6 @@
+{
+  "name": "Klangwerk",
+  "description": "Professioneller lokaler Musik- und Video-Player für Android mit Wiedergabelisten, Sofortsuche, 5-Band-Equalizer und Material You Dark Mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

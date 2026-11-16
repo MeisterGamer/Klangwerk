@@ -1,0 +1,68 @@
+<resources>
+    <string name="app_name">Klangwerk</string>
+
+    <!-- Navigation -->
+    <string name="nav_library">Bibliothek</string>
+    <string name="nav_playlists">Playlists</string>
+    <string name="nav_videos">Videos</string>
+    <string name="nav_equalizer">Equalizer</string>
+
+    <!-- Bibliothek & Suche -->
+    <string name="search_placeholder">Titel, Alben, Interpreten, Videos suchen…</string>
+    <string name="search_clear">Suche löschen</string>
+    <string name="filter_all_tracks">Titel</string>
+    <string name="filter_albums">Alben</string>
+    <string name="filter_artists">Interpreten</string>
+    <string name="filter_folders">Importiert</string>
+    <string name="sort_title">Nach Titel</string>
+    <string name="sort_artist">Nach Interpret</string>
+    <string name="sort_duration">Nach Dauer</string>
+    <string name="sort_recent">Zuletzt hinzugefügt</string>
+
+    <!-- Import & Berechtigungen -->
+    <string name="permission_audio_title">Lokale Musik entdecken</string>
+    <string name="permission_audio_desc">Erlaube den Zugriff auf deine Audiodateien, um MP3, FLAC, AAC, OGG, WAV und weitere Formate automatisch zu laden.</string>
+    <string name="permission_grant_button">Medien scannen</string>
+    <string name="import_files_button">Dateien importieren</string>
+    <string name="import_folder_button">Ordner verknüpfen</string>
+    <string name="import_videos_button">Videos auswählen</string>
+    <string name="rescan_library">Neu scannen</string>
+
+    <!-- Playlists -->
+    <string name="playlist_create">Neue Playlist</string>
+    <string name="playlist_name_label">Name der Wiedergabeliste</string>
+    <string name="playlist_name_hint">z. B. Fokus, Nachtfahrt, Workout</string>
+    <string name="playlist_rename">Umbenennen</string>
+    <string name="playlist_delete">Playlist löschen</string>
+    <string name="playlist_add_to">Zur Playlist hinzufügen</string>
+    <string name="playlist_favorites">Favoriten</string>
+    <string name="playlist_recent">Zuletzt gespielt</string>
+    <string name="playlist_play_all">Alle abspielen</string>
+    <string name="playlist_shuffle">Zufall</string>
+
+    <!-- Player & Equalizer -->
+    <string name="player_now_playing">Aktuelle Wiedergabe</string>
+    <string name="player_queue">Warteschlange</string>
+    <string name="player_play_next">Als Nächstes abspielen</string>
+    <string name="eq_title">5-Band-Equalizer</string>
+    <string name="eq_enabled">Equalizer aktiv</string>
+    <string name="eq_presets">Klangprofile</string>
+    <string name="eq_bass_boost">Bass-Boost</string>
+    <string name="eq_virtualizer">Virtualizer</string>
+    <string name="eq_reset">Zurücksetzen</string>
+
+    <!-- Einstellungen & Info -->
+    <string name="settings_title">Darstellung &amp; Akku</string>
+    <string name="settings_amoled_mode">Reines AMOLED-Schwarz</string>
+    <string name="settings_amoled_desc">Spart zusätzlich Energie auf OLED-Displays</string>
+    <string name="settings_dynamic_color">Material You Dynamic Color</string>
+    <string name="settings_dynamic_color_desc">Passt Akzentfarben an das System-Theme an</string>
+
+    <!-- Aktionen -->
+    <string name="action_save">Speichern</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_close">Schließen</string>
+    <string name="action_back">Zurück</string>
+    <string name="action_details">Dateidetails</string>
+</resources>
